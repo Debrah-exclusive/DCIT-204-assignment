@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Algorithm Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: A dashboard-style single-page application with top navigation for quick scrolling. The core of the app is an interactive "Algorithm Comparison" section featuring filterable cards, dynamic charts for visual comparison of complexities, and a sortable data table. This is followed by a "Code Explorer" section to view implementations on-demand, and a final "Project Details" section for setup and usage info. This structure was chosen to prioritize user exploration and comparison, which is the primary value of the source report, allowing users to move from high-level visual comparison to specific code details seamlessly, rather than following the linear structure of the original document. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Algorithm Complexity Data -> Goal: Compare -> Viz: Interactive Bar Charts (Chart.js) & Sortable HTML Table -> Interaction: Users can filter algorithms by type (Search/Sort) and properties (Stable/In-Place). The charts and table dynamically update. This provides a multi-faceted comparison tool (visual + tabular) that is more engaging than a static table.
+        - Report Info: Algorithm Implementations (Java code) -> Goal: Inform/Reference -> Viz: Dropdown-controlled Code Block -> Interaction: Users select an algorithm to view its code. This organizes the code snippets neatly without cluttering the UI.
+        - Report Info: Project Structure -> Goal: Organize -> Viz: Styled HTML list emulating a file tree -> Interaction: Static. This cleanly presents the project layout using only HTML/CSS.
+        - Library/Method: Chart.js for all charts (Canvas-based), Tailwind CSS for all layout and styling, and vanilla JavaScript for all interaction logic. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 400px; max-height: 50vh; }
+        @media (min-width: 768px) { .chart-container { height: 500px; } }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; }
+        .nav-link:hover { color: #0d9488; }
+        .nav-link.active { color: #0d9488; border-bottom-color: #0d9488; }
+        html { scroll-behavior: smooth; }
+        .code-block { background-color: #282c34; color: #abb2bf; font-family: 'Fira Code', 'Courier New', monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-teal-700">🚀 Algorithm Explorer</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 border-b-2 border-transparent">Overview</a>
+                        <a href="#comparison" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 border-b-2 border-transparent">Comparison</a>
+                        <a href="#code" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 border-b-2 border-transparent">Code Explorer</a>
+                        <a href="#usage" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 border-b-2 border-transparent">Project Details</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-white border border-stone-300 rounded-md p-2 text-sm">
+                        <option value="#overview">Overview</option>
+                        <option value="#comparison">Comparison</option>
+                        <option value="#code">Code Explorer</option>
+                        <option value="#usage">Project Details</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-24">
+            <h1 class="text-4xl font-extrabold text-stone-800 mb-4 text-center">Java Algorithm Application</h1>
+            <p class="text-lg text-stone-600 max-w-3xl mx-auto text-center mb-10">
+                This is an interactive exploration of a comprehensive Java application that demonstrates various search and sorting algorithms. The original project provides both console and GUI interfaces to execute and analyze these fundamental computer science concepts. This web application brings the report's data to life, allowing for easy comparison and study.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                    <h3 class="text-xl font-bold mb-3 text-teal-700">Search Algorithms</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-700">
+                        <li><strong>Linear Search:</strong> Sequential search through array elements.</li>
+                        <li><strong>Binary Search:</strong> Efficient search on sorted arrays.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                    <h3 class="text-xl font-bold mb-3 text-teal-700">Sorting Algorithms</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-700">
+                        <li><strong>Selection Sort</strong> & <strong>Insertion Sort</strong></li>
+                        <li><strong>Merge Sort</strong> & <strong>Bubble Sort</strong></li>
+                        <li><strong>Quick Sort</strong> & <strong>Shell Sort</strong></li>
+                        <li><strong>Radix Sort</strong> & <strong>Heap Sort</strong></li>
+                        <li><strong>Nearly Sorted (Insertion)</strong> & <strong>Counting Sort</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-800 mb-2">Algorithm Comparison</h2>
+                <p class="text-md text-stone-600 max-w-2xl mx-auto">
+                    Visually compare the performance and properties of the algorithms. Use the filters to narrow down the results in the charts and the table below. The charts represent complexity classes numerically for comparison.
+                </p>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-stone-200 mb-8 sticky top-20 z-40">
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <span class="font-bold text-sm mr-4">Filters:</span>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-medium">Type:</label>
+                        <select id="type-filter" class="filter-btn bg-stone-100 border border-stone-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            <option value="all">All</option>
+                            <option value="Sort">Sort</option>
+                            <option value="Search">Search</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-medium">Stable:</label>
+                        <select id="stable-filter" class="filter-btn bg-stone-100 border border-stone-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            <option value="all">All</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-medium">In-Place:</label>
+                        <select id="inplace-filter" class="filter-btn bg-stone-100 border border-stone-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            <option value="all">All</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                    <h3 class="text-xl font-bold text-center mb-4">Average Time Complexity</h3>
+                    <div class="chart-container">
+                        <canvas id="timeComplexityChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                    <h3 class="text-xl font-bold text-center mb-4">Space Complexity</h3>
+                    <div class="chart-container">
+                        <canvas id="spaceComplexityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto bg-white p-4 rounded-lg shadow-md border border-stone-200">
+                <table class="min-w-full divide-y divide-stone-200">
+                    <thead class="bg-stone-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Algorithm</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Time Complexity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Space Complexity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Stable</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">In-Place</th>
+                        </tr>
+                    </thead>
+                    <tbody id="algorithm-table-body" class="bg-white divide-y divide-stone-200">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="code" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-stone-800 mb-2">Code Explorer</h2>
+                <p class="text-md text-stone-600 max-w-2xl mx-auto">
+                    Explore the Java implementation of each algorithm. Select an algorithm from the dropdown to view its source code and a detailed explanation. This provides a direct look at the logic discussed in the report.
+                </p>
+            </div>
+            <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                <div class="mb-4">
+                    <label for="algorithm-select" class="block text-sm font-medium text-stone-700 mb-2">Select Algorithm:</label>
+                    <select id="algorithm-select" class="w-full bg-stone-100 border border-stone-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </select>
+                </div>
+                <div id="algorithm-explanation" class="mb-4 p-4 bg-stone-50 rounded-md text-stone-700 border border-stone-200">
+                    <p>Select an algorithm to see its explanation here.</p>
+                </div>
+                <div id="code-display" class="code-block p-4 rounded-md overflow-x-auto">
+                    <p>Select an algorithm to see its code here.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="usage" class="scroll-mt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-stone-800 mb-2">Project Details & Usage</h2>
+                <p class="text-md text-stone-600 max-w-2xl mx-auto">
+                    Here you'll find details about the original project's structure, compilation, and execution instructions as described in the source documentation.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                    <h3 class="text-xl font-bold mb-4 text-teal-700">📁 Project Structure</h3>
+                    <div class="bg-stone-100 p-4 rounded-md text-sm text-stone-700 font-mono">
+<pre>DCIT 204 assignment/
+├── Main.java         # Dual interface app
+├── Algorithms.java   # Algorithm logic
+├── AlgorithmGUI.java # Swing GUI
+├── README.md         # Documentation
+└── .gitignore        # Ignore file</pre>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md border border-stone-200">
+                    <h3 class="text-xl font-bold mb-4 text-teal-700">🛠️ How to Compile & Run</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-bold text-md mb-1">Prerequisites</h4>
+                            <p class="text-sm text-stone-600">Java Development Kit (JDK) 8 or higher.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-md mb-1">Compilation</h4>
+                            <p class="text-sm font-mono bg-stone-100 p-2 rounded-md">javac *.java</p>
+                        </div>
+                         <div>
+                            <h4 class="font-bold text-md mb-1">Execution</h4>
+                            <p class="text-sm text-stone-600 mb-1">Run <code class="font-mono bg-stone-100 p-1 rounded-sm">java Main</code> and choose a mode, or launch the GUI directly with <code class="font-mono bg-stone-100 p-1 rounded-sm">java AlgorithmGUI</code>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-stone-800 text-white mt-16">
+        <div class="container mx-auto py-6 px-4 text-center text-sm">
+            <p>Interactive report generated from DCIT 204 coursework documentation.</p>
+            <p>This project is for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        const algorithmData = [
+            { name: 'Linear Search', type: 'Search', time: 'O(n)', space: 'O(1)', stable: 'N/A', inplace: 'N/A', timeVal: 3, spaceVal: 1 },
+            { name: 'Binary Search', type: 'Search', time: 'O(log n)', space: 'O(1)', stable: 'N/A', inplace: 'N/A', timeVal: 2, spaceVal: 1 },
+            { name: 'Selection Sort', type: 'Sort', time: 'O(n²)', space: 'O(1)', stable: 'No', inplace: 'Yes', timeVal: 4, spaceVal: 1 },
+            { name: 'Insertion Sort', type: 'Sort', time: 'O(n²) worst, O(n) best', space: 'O(1)', stable: 'Yes', inplace: 'Yes', timeVal: 4, spaceVal: 1 },
+            { name: 'Merge Sort', type: 'Sort', time: 'O(n log n)', space: 'O(n)', stable: 'Yes', inplace: 'No', timeVal: 3, spaceVal: 2 },
+            { name: 'Bubble Sort', type: 'Sort', time: 'O(n²)', space: 'O(1)', stable: 'Yes', inplace: 'Yes', timeVal: 4, spaceVal: 1 },
+            { name: 'Quick Sort', type: 'Sort', time: 'O(n log n) avg, O(n²) worst', space: 'O(log n)', stable: 'No', inplace: 'Yes', timeVal: 3, spaceVal: 2 },
+            { name: 'Shell Sort', type: 'Sort', time: 'O(n^1.5) approx', space: 'O(1)', stable: 'No', inplace: 'Yes', timeVal: 4, spaceVal: 1 },
+            { name: 'Radix Sort', type: 'Sort', time: 'O(d×(n+k))', space: 'O(n+k)', stable: 'Yes', inplace: 'No', timeVal: 3, spaceVal: 3 },
+            { name: 'Heap Sort', type: 'Sort', time: 'O(n log n)', space: 'O(1)', stable: 'No', inplace: 'Yes', timeVal: 3, spaceVal: 1 },
+            { name: 'Counting Sort', type: 'Sort', time: 'O(n+k)', space: 'O(k)', stable: 'Yes', inplace: 'No', timeVal: 3, spaceVal: 3 },
+        ];
+
+        const codeSnippets = {
+            'Linear Search': {
+                code: `public static int linearSearch(int[] arr, int target) {\n    for (int i = 0; i < arr.length; i++) {\n        if (arr[i] == target) {\n            return i; // Return index when found\n        }\n    }\n    return -1; // Return -1 if not found\n}`,
+                explanation: `This code implements the Linear Search algorithm. It iterates through the array from the beginning (index 0) to the end. In each step, it checks if the current element matches the target value. If a match is found, it immediately returns the index of that element. If the loop completes without finding the target, it means the target is not present in the array, and the function returns -1.`
+            },
+            'Binary Search': {
+                code: `public static int binarySearch(int[] arr, int target) {\n    int left = 0, right = arr.length - 1;\n    \n    while (left <= right) {\n        int mid = left + (right - left) / 2; // Prevent overflow\n        \n        if (arr[mid] == target) return mid;\n        if (arr[mid] < target) left = mid + 1;\n        else right = mid - 1;\n    }\n    return -1;\n}`,
+                explanation: `This code implements the Binary Search algorithm, which requires the input array to be sorted. It uses a "divide and conquer" approach. It maintains two pointers, 'left' and 'right', defining the current search space. In each iteration, it calculates the middle element. If the middle element is the target, its index is returned. If the middle element is less than the target, the search continues in the right half; otherwise, it continues in the left half. This process repeatedly halves the search space until the target is found or the search space becomes empty.`
+            },
+            'Selection Sort': {
+                code: `public static void selectionSort(int[] arr) {\n    int n = arr.length;\n    for (int i = 0; i < n - 1; i++) {\n        int minIdx = i;\n        // Find minimum element in remaining array\n        for (int j = i + 1; j < n; j++) {\n            if (arr[j] < arr[minIdx]) {\n                minIdx = j;\n            }\n        }\n        // Swap minimum with current position\n        int temp = arr[minIdx];\n        arr[minIdx] = arr[i];\n        arr[i] = temp;\n    }\n}`,
+                explanation: `Selection Sort is an in-place comparison sorting algorithm. It works by repeatedly finding the minimum element (considering ascending order) from the unsorted part of the array and putting it at the beginning of the sorted part. The outer loop iterates through each position where a sorted element should be placed. The inner loop finds the smallest element in the remaining unsorted portion. Finally, it swaps the found minimum element with the element at the current position of the outer loop.`
+            },
+            'Insertion Sort': {
+                code: `public static void insertionSort(int[] arr) {\n    int n = arr.length;\n    for (int i = 1; i < n; ++i) {\n        int key = arr[i];\n        int j = i - 1;\n\n        /* Move elements of arr[0..i-1], that are\n           greater than key, to one position ahead\n           of their current position */\n        while (j >= 0 && arr[j] > key) {\n            arr[j + 1] = arr[j];\n            j = j - 1;\n        }\n        arr[j + 1] = key;\n    }\n}`,
+                explanation: `Insertion Sort builds the final sorted array (or list) one item at a time. It is much less efficient on large lists than more advanced algorithms such as quicksort, heapsort, or merge sort. However, it has several advantages: it is simple to implement, efficient for small data sets, and efficient for data sets that are already substantially sorted. It works by taking elements from the array and inserting them into the correct position in a new sorted sub-array. The inner loop shifts elements to make space for the 'key' element.`
+            },
+            'Merge Sort': {
+                code: `// Note: 'merge' helper function is required and not shown here.\npublic static void mergeSort(int[] arr, int left, int right) {\n    if (left < right) {\n        int mid = left + (right - left) / 2;\n        \n        // Recursively sort both halves\n        mergeSort(arr, left, mid);\n        mergeSort(arr, mid + 1, right);\n        \n        // Merge the sorted halves\n        merge(arr, left, mid, right); // This helper function combines two sorted sub-arrays.\n    }\n}`,
+                explanation: `Merge Sort is a highly efficient, comparison-based sorting algorithm. It's a "divide and conquer" algorithm. The main function recursively divides the array into two halves until it reaches sub-arrays of size 1 (which are inherently sorted). Once the array is divided, the 'merge' helper function (not shown in this snippet, but essential) comes into play. It takes two sorted sub-arrays and merges them back together into a single sorted array. This merging process is the key to its efficiency and stability.`
+            },
+            'Bubble Sort': {
+                code: `public static void bubbleSort(int[] arr) {\n    int n = arr.length;\n    for (int i = 0; i < n - 1; i++) {\n        for (int j = 0; j < n - i - 1; j++) {\n            if (arr[j] > arr[j + 1]) {\n                // Swap arr[j] and arr[j+1]\n                int temp = arr[j];\n                arr[j] = arr[j + 1];\n                arr[j + 1] = temp;\n            }\n        }\n    }\n}`,
+                explanation: `Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. The pass through the list is repeated until no swaps are needed, which indicates that the list is sorted. It gets its name because smaller elements "bubble" to the top (or larger elements "sink" to the bottom). While easy to understand, it is highly inefficient for large datasets.`
+            },
+            'Quick Sort': {
+                code: `// Note: 'partition' helper function is required and not shown here.\npublic static void quickSort(int[] arr, int low, int high) {\n    if (low < high) {\n        int pi = partition(arr, low, high); // Partition index\n        \n        // Recursively sort elements before and after partition\n        quickSort(arr, low, pi - 1);\n        quickSort(arr, pi + 1, high);\n    }\n}`,
+                explanation: `Quick Sort is a highly efficient, comparison-based sorting algorithm that uses a "divide and conquer" strategy. It works by selecting a 'pivot' element from the array and partitioning the other elements into two sub-arrays, according to whether they are less than or greater than the pivot. The sub-arrays are then sorted recursively. The 'partition' helper function (not shown) is crucial here, as it places the pivot in its correct sorted position and arranges elements around it.`
+            },
+            'Shell Sort': {
+                code: `public static void shellSort(int[] arr) {\n    int n = arr.length;\n\n    // Start with a large gap, then reduce the gap\n    for (int gap = n / 2; gap > 0; gap /= 2) {\n        // Do a gapped insertion sort for this gap size.\n        // The first gap elements a[0..gap-1] are already in gapped order\n        // keep adding one more element until the entire array is gap sorted\n        for (int i = gap; i < n; i += 1) {\n            // add arr[i] to the elements that have been gap sorted\n            // save arr[i] in temp and make a hole at position i\n            int temp = arr[i];\n\n            // shift earlier gap-sorted elements up until the correct location for arr[i] is found\n            int j;\n            for (j = i; j >= gap && arr[j - gap] > temp; j -= gap)\n                arr[j] = arr[j - gap];\n\n            //  put temp (the original arr[i]) in its correct location\n            arr[j] = temp;\n        }\n    }\n}`,
+                explanation: `Shell Sort is an optimization of Insertion Sort. It works by first sorting elements that are far apart from each other, then progressively reducing the gap between elements to be sorted. This "gapped" comparison and swapping allows elements to move to their correct positions much faster than in a simple Insertion Sort, especially for elements that are very far from their final sorted position. The algorithm repeatedly performs a gapped insertion sort with decreasing gap sizes until the gap is 1 (which is a standard insertion sort pass).`
+            },
+            'Radix Sort': {
+                code: `// Note: Requires helper functions like 'countSort' for digits\npublic static void radixSort(int[] arr) {\n    // Find the maximum number to know number of digits\n    int max = arr[0];\n    for (int i = 1; i < arr.length; i++) {\n        if (arr[i] > max) {\n            max = arr[i];\n        }\n    }\n\n    // Do counting sort for every digit. Note that instead of passing digit number,\n    // exp is passed. exp is 10^i where i is current digit number\n    for (int exp = 1; max / exp > 0; exp *= 10) {\n        countSort(arr, exp); // This helper sorts based on the current digit\n    }\n}`,
+                explanation: `Radix Sort is a non-comparative integer sorting algorithm that sorts data with integer keys by grouping keys by individual digits which share the same significant position and value. It works for non-negative integers. The main idea is to perform a stable sort (like Counting Sort) on each digit position, starting from the least significant digit (LSD) to the most significant digit (MSD). By repeatedly applying a stable sort on each digit, the entire array becomes sorted.`
+            },
+            'Heap Sort': {
+                code: `// Note: Requires helper functions like 'heapify'\npublic static void heapSort(int[] arr) {\n    int n = arr.length;\n\n    // Build heap (rearrange array)\n    for (int i = n / 2 - 1; i >= 0; i--) {\n        heapify(arr, n, i);\n    }\n\n    // One by one extract an element from heap\n    for (int i = n - 1; i > 0; i--) {\n        // Move current root to end\n        int temp = arr[0];\n        arr[0] = arr[i];\n        arr[i] = temp;\n\n        // call max heapify on the reduced heap\n        heapify(arr, i, 0);\n    }\n}`,
+                explanation: `Heap Sort is a comparison-based sorting technique based on the Binary Heap data structure. It's similar to selection sort where we first find the maximum element and place it at the end. It builds a max-heap from the input data (using the 'heapify' helper function). Then, it repeatedly extracts the maximum element from the heap (which is always at the root), places it at the end of the sorted portion of the array, and rebuilds the heap with the remaining elements. This process continues until the entire array is sorted.`
+            },
+            'Nearly Sorted': {
+                code: `public static void nearlySortedInsertionSort(int[] arr) {\n    int n = arr.length;\n    for (int i = 1; i < n; ++i) {\n        int key = arr[i];\n        int j = i - 1;\n\n        /* Move elements of arr[0..i-1], that are\n           greater than key, to one position ahead\n           of their current position */\n        while (j >= 0 && arr[j] > key) {\n            arr[j + 1] = arr[j];\n            j = j - 1;\n        }\n        arr[j + 1] = key;\n    }\n}`,
+                explanation: `This refers to an optimized version of Insertion Sort that performs exceptionally well on "nearly sorted" arrays. While the code snippet is identical to the standard Insertion Sort, the "Nearly Sorted" context highlights its specific strength. Insertion Sort's time complexity becomes O(n) (linear time) when the input array is already sorted or nearly sorted, because the inner 'while' loop performs very few shifts. This makes it a good choice for maintaining sorted lists where elements are frequently added or removed, or for small arrays.`
+            },
+            'Counting Sort': {
+                code: `// Note: Requires helper functions for finding max element and creating count array\npublic static void countingSort(int[] arr) {\n    int max = arr[0];\n    for (int i = 1; i < arr.length; i++) {\n        if (arr[i] > max) {\n            max = arr[i];\n        }\n    }\n\n    int[] count = new int[max + 1];\n    for (int i = 0; i < arr.length; i++) {\n        count[arr[i]]++;\n    }\n\n    // Change count[i] so that count[i] now contains actual\n    // position of this character in output array\n    for (int i = 1; i <= max; i++) {\n        count[i] += count[i - 1];\n    }\n\n    int[] output = new int[arr.length];\n    for (int i = arr.length - 1; i >= 0; i--) {\n        output[count[arr[i]] - 1] = arr[i];\n        count[arr[i]]--;\n    }\n\n    for (int i = 0; i < arr.length; i++) {\n        arr[i] = output[i];\n    }\n}`,
+                explanation: `Counting Sort is a non-comparative sorting algorithm that works by counting the number of occurrences of each distinct element in the input array. It is efficient for sorting a collection of objects according to keys that are small positive integers. It builds a count array to store the frequency of each number, then modifies the count array to store the actual position of each number in the output array. Finally, it builds the output array by placing elements into their correct sorted positions based on the modified count array.`
+            }
+        };
+
+        let timeChart, spaceChart;
+        const chartColors = {
+            backgroundColor: ['rgba(13, 148, 136, 0.2)', 'rgba(8, 126, 126, 0.2)', 'rgba(15, 118, 110, 0.2)'],
+            borderColor: ['rgb(13, 148, 136)', 'rgb(8, 126, 126)', 'rgb(15, 118, 110)']
+        };
+        const complexityLevels = ['O(1)', 'O(log n)', 'O(n) / O(n+k)', 'O(n log n) / O(n²)'];
+
+        function renderTable(data) {
+            const tableBody = document.getElementById('algorithm-table-body');
+            tableBody.innerHTML = '';
+            data.forEach(algo => {
+                const row = `
+                    <tr class="hover:bg-stone-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-stone-900">${algo.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">${algo.time}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-600">${algo.space}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">${algo.stable === 'Yes' ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Yes</span>' : algo.stable === 'No' ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">No</span>' : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-stone-100 text-stone-800">N/A</span>'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">${algo.inplace === 'Yes' ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Yes</span>' : algo.inplace === 'No' ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">No</span>' : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-stone-100 text-stone-800">N/A</span>'}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+        
+        function createChart(ctx, label, data, chartInstance) {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(a => a.name),
+                    datasets: [{
+                        label: label,
+                        data: data.map(a => label.includes('Time') ? a.timeVal : a.spaceVal),
+                        backgroundColor: data.map((_, i) => chartColors.backgroundColor[i % chartColors.backgroundColor.length]),
+                        borderColor: data.map((_, i) => chartColors.borderColor[i % chartColors.borderColor.length]),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return complexityLevels[value-1] || '';
+                                },
+                                font: { size: 10 }
+                            }
+                        },
+                        y: {
+                            ticks: { font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    const algo = data[context.dataIndex];
+                                    return label.includes('Time') ? `Time: ${algo.time}` : `Space: ${algo.space}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateChartsAndTable() {
+            const typeFilter = document.getElementById('type-filter').value;
+            const stableFilter = document.getElementById('stable-filter').value;
+            const inplaceFilter = document.getElementById('inplace-filter').value;
+
+            const filteredData = algorithmData.filter(algo => {
+                const typeMatch = typeFilter === 'all' || algo.type === typeFilter;
+                const stableMatch = stableFilter === 'all' || algo.stable === stableFilter;
+                const inplaceMatch = inplaceFilter === 'all' || algo.inplace === inplaceFilter;
+                return typeMatch && stableMatch && inplaceMatch;
+            });
+            
+            renderTable(filteredData);
+            
+            const timeCtx = document.getElementById('timeComplexityChart').getContext('2d');
+            timeChart = createChart(timeCtx, 'Average Time Complexity', filteredData, timeChart);
+
+            const spaceCtx = document.getElementById('spaceComplexityChart').getContext('2d');
+            spaceChart = createChart(spaceCtx, 'Space Complexity', filteredData, spaceChart);
+        }
+
+        function populateCodeExplorer() {
+            const select = document.getElementById('algorithm-select');
+            const codeDisplay = document.getElementById('code-display');
+            const algorithmExplanation = document.getElementById('algorithm-explanation');
+            
+            // Clear existing options
+            select.innerHTML = '';
+            
+            // Add a default "Select an algorithm" option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select an algorithm';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            select.appendChild(defaultOption);
+
+            Object.keys(codeSnippets).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', (e) => {
+                const selectedAlgo = e.target.value;
+                if (selectedAlgo && codeSnippets[selectedAlgo]) {
+                    codeDisplay.innerHTML = `<pre><code>${codeSnippets[selectedAlgo].code}</code></pre>`;
+                    algorithmExplanation.innerHTML = `<p>${codeSnippets[selectedAlgo].explanation}</p>`;
+                } else {
+                    codeDisplay.innerHTML = `<p>Select an algorithm to see its code here.</p>`;
+                    algorithmExplanation.innerHTML = `<p>Select an algorithm to see its explanation here.</p>`;
+                }
+            });
+
+            // No initial dispatch to keep "Select an algorithm" as default
+        }
+
+        function setupNavigation() {
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                window.location.hash = e.target.value;
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => observer.observe(section));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('change', updateChartsAndTable);
+            });
+            
+            populateCodeExplorer();
+            updateChartsAndTable();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>
